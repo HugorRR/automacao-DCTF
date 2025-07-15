@@ -84,3 +84,6 @@ if __name__ == '__main__':
     finally:
         print("\nFinalizando...")
         logging.info("Programa finalizado") 
+        # Limpar a pasta de perfil após a execução
+        from src.utils import limpar_pasta
+        limpar_pasta(CACHE) 
