@@ -50,7 +50,7 @@ Automação para download e organização de DARFs via e-CAC, utilizando Seleniu
 
 1. Execute o script principal:
    ```sh
-   python new.py
+   python main.py
    ```
 2. Faça o login manualmente no e-CAC quando solicitado.
 3. Aguarde a automação processar todos os clientes da planilha.
