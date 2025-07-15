@@ -1,7 +1,0 @@
-1 - Não mova o mouse e nem tecle durante a execução.
-
-2 - A RPA trabalha usando as informações da planilha, então sempre mantenha a mesma atualizada.
-
-3 - Caso ocorra algum erro não tratado durante a execução, informe o T.I em que parte do processo aconteceu o erro.
-
-4 - Caso o e-CAC trave em exclua os dados dos clientes que foram baixados e deixe apenas os que não foram e execute a RPA novamente.

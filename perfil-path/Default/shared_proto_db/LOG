@@ -1,0 +1,5 @@
+2025/07/15-11:46:17.652 9f1c Creating DB G:\Drives compartilhados\BANCO DE DADOS T.I\Automacoes\automacao-DCTF\perfil-path\Default\shared_proto_db since it was missing.
+2025/07/15-11:46:18.117 9f1c Reusing MANIFEST G:\Drives compartilhados\BANCO DE DADOS T.I\Automacoes\automacao-DCTF\perfil-path\Default\shared_proto_db/MANIFEST-000001
+2025/07/15-13:22:10.890 9ecc Level-0 table #5: started
+2025/07/15-13:22:10.980 9ecc Level-0 table #5: 138931 bytes OK
+2025/07/15-13:22:10.997 9ecc Delete type=0 #3
