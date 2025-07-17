@@ -13,7 +13,6 @@ import pandas as pd
 from .utils import reconhecimento, clique, clique2, lentidao
 
 # Função para renomear arquivo
-
 def renomear_arquivo_recente(codigo, competencia, pasta_competencia):
     try:
         arquivos = list(Path(pasta_competencia).glob("*"))
@@ -25,7 +24,6 @@ def renomear_arquivo_recente(codigo, competencia, pasta_competencia):
         logging.error(f"Erro ao renomear o arquivo: {e}")
 
 # Configurar driver Chrome
-
 def configurar_driver(perfil_path, pasta_competencia):
     options = uc.ChromeOptions()
     options.add_argument("--user-data-dir=" + str(perfil_path))
@@ -46,7 +44,6 @@ def configurar_driver(perfil_path, pasta_competencia):
     return driver
 
 # Login manual
-
 def login(driver):
     try:
         logging.info("Iniciando processo de login manual.")
@@ -71,51 +68,52 @@ def login(driver):
         return True
 
 # Navegação
-
-def navegacao(driver, IMAGEM_DIR, data_inicial, data_final):
+def navegacao(driver):
     try:
         logging.info("Iniciando navegação no sistema.")
-        WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="linkHome"]'))).click() # Botão Home 
-        lentidao()
-        WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//li[@id="btn214"]'))).click() # Botão Declarações e Demonstrativos
-        lentidao()
-        WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="containerServicos214"]/div[2]/ul/li[1]/a'))).click() # Assinar e transmitir DCTF
-        lentidao()
-        lentidao()
-        bt_captcha1 = os.path.join(IMAGEM_DIR, 'bt_captcha.png') # Procura o Quadrado "Sou Humano"
-        lentidao()
-        clique([bt_captcha1], 30, confidence=0.8) # Clica no Quadrado "Sou Humano"
-        lentidao()
-        bt_prosseguir1 = os.path.join(IMAGEM_DIR, 'bt_prosseguir.png') # Procura o Botão Prosseguir
-        lentidao()
-        clique([bt_prosseguir1], 30, confidence=0.8) # Clica no Botão Prosseguir
-        lentidao()
+
+        bt_home = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="linkHome"]'))) # Botão Home 
+        bt_home.click()
+
+        bt_declaracoes = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//li[@id="btn214"]'))) # Botão Declarações e Demonstrativos
+        bt_declaracoes.click()
+
+        bt_assinar = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="containerServicos214"]/div[2]/ul/li[1]/a'))) # Assinar e transmitir DCTF
+        bt_assinar.click()
+
+        iframe1 = WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.XPATH, '//*[@id="frmApp"]'))) # Iframe do site
+        driver.switch_to.frame(iframe1)
+
+        iframe2 = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="conteudo-pagina"]/div[2]/iframe'))) # Iframe do Captcha   
+        driver.switch_to.frame(iframe2)
+
+        time.sleep(3)
+        bt_sou_humano = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="checkbox"]'))) # Botao sou Humano
+        bt_sou_humano.click()
+
+        driver.switch_to.default_content()
+
+        iframe1 = WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.XPATH, '//*[@id="frmApp"]'))) # Iframe do site
+        driver.switch_to.frame(iframe1)
+        bt_prosseguir = WebDriverWait(driver, 30).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="ctl00_cphConteudo_btnProsseguir"]'))) # Botao Prosseguir
+        bt_prosseguir.click()
+        driver.switch_to.default_content()
+
         iframe = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="frmApp"]'))) # Iframe do site
         driver.switch_to.frame(iframe)
-        WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="ctl00_cphConteudo_chkListarOutorgantes"]'))).click() # Check box Sou procurador
-        time.sleep(10)
-        data_inicio = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="txtDataInicio"]'))) # Campo de data inicial
-        data_inicio.clear() # Limpa o campo de data inicial
-        data_inicio.send_keys(data_inicial) # Escreve a data inicial
-        lentidao()
-        data_fim = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="txtDataFinal"]'))) # Campo de data final
-        data_fim.clear() # Limpa o campo de data final
-        data_fim.send_keys(data_final) # Escreve a data final
-        lentidao()
+        bt_sou_procurador = WebDriverWait(driver, 30).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="ctl00_cphConteudo_chkListarOutorgantes"]')))
+        bt_sou_procurador.click()
         driver.switch_to.default_content()
 
     except Exception as e:
         logging.error(f'Erro de navegacao: {e}')
         try:
-            WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="linkHome"]'))).click()
+            bt_home.click()
         except:
             logging.error("Não foi possível retornar à página inicial após erro de navegação.")
-            print("Erro na navegação. Tente navegar manualmente para a página correta.")
-            input("Pressione ENTER quando estiver pronto para continuar...")
 
 # Transmissão
-
-def transmissao(cnpjs, codigos, df, driver, IMAGEM_DIR, competencia, pasta_competencia):
+def transmissao(cnpjs, codigos, df, driver, IMAGEM_DIR, competencia, pasta_competencia, data_inicial, data_final):
     for cnpj, codigo in zip(cnpjs, codigos):
         status = df.loc[df['CNPJ'] == cnpj, 'STATUS'].values
         if len(status) > 0 and ('Guia baixada' in str(status[0]) or pd.isna(status[0])):
@@ -128,24 +126,29 @@ def transmissao(cnpjs, codigos, df, driver, IMAGEM_DIR, competencia, pasta_compe
 
                 iframe = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="frmApp"]'))) # Iframe do site
                 driver.switch_to.frame(iframe)
+                
+                data_inicio = WebDriverWait(driver, 30).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="txtDataInicio"]'))) # Campo de data inicial
+                data_inicio.clear() # Limpa o campo de data inicial
+                data_inicio.send_keys(data_inicial) # Escreve a data inicial
+
+                data_fim = WebDriverWait(driver, 30).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="txtDataFinal"]'))) # Campo de data final
+                data_fim.clear() # Limpa o campo de data final
+                data_fim.send_keys(data_final) # Escreve a data final
 
                 bt_ortogante = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="ctl00_cphConteudo_UpdatePanelListaOutorgantes"]/div/div[2]/div/div/div/button')))
                 bt_ortogante.click() # Campo ortogante onde tem entrada do cnpj do cliente
-
 
                 bt_nenhum = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="ctl00_cphConteudo_UpdatePanelListaOutorgantes"]/div/div[2]/div/div/div/div/div[2]/div/button[2]')))
                 bt_nenhum.click() # remover clientes selecionados antes de inserir o novo cnpj para pesquisar
 
                 campo_cnpj = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="ctl00_cphConteudo_UpdatePanelListaOutorgantes"]/div/div[2]/div/div/div/div/div[1]/input')))
                 campo_cnpj.send_keys(cnpj)
-                lentidao()
 
                 selecionar_cnpj = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="ctl00_cphConteudo_UpdatePanelListaOutorgantes"]/div/div[2]/div/div/div/div/ul')))
                 selecionar_cnpj.click()
 
                 bt_pesquisar = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="ctl00_cphConteudo_btnFiltar"]')))
                 bt_pesquisar.click()
-
                 driver.switch_to.default_content()
                
                 erro_sem_declaracoes = os.path.join(IMAGEM_DIR, 'rc_sem_declaracoes.png')
@@ -154,7 +157,7 @@ def transmissao(cnpjs, codigos, df, driver, IMAGEM_DIR, competencia, pasta_compe
                     reconhecimento([erro_sem_declaracoes], 30, confidence=0.8)
                     logging.info("Nenhuma declaração encontrada.")
                     df.loc[df['CNPJ'] == cnpj, 'STATUS'] = 'Nenhuma declaração encontrada'
-                    df.to_excel('Clientes.xlsx', index=False)
+                    df.to_excel('database.xlsx', index=False)
                     break
                 except Exception as e:
                     logging.info('Declaracao encontrada')
@@ -162,64 +165,88 @@ def transmissao(cnpjs, codigos, df, driver, IMAGEM_DIR, competencia, pasta_compe
                     driver.switch_to.frame(iframe)
                     bt_visualizar = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="ctl00_cphConteudo_tabelaListagemDctf_GridViewDctfs_ctl02_lbkVisualizarDctf"]')))
                     bt_visualizar.click() # Clica no botão visualizar
-                    lentidao()
                     driver.switch_to.default_content()
                 try:
-                    lentidao()
                     iframe = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="frmApp"]'))) # Iframe do site
                     driver.switch_to.frame(iframe)
                     bt_emitir_darf = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="LinkEmitirDARFIntegral"]')))
                     bt_emitir_darf.click() # Clica no botão emitir DARF
                     driver.switch_to.default_content()
-                    lentidao()
+
                     time.sleep(5)
                     renomear_arquivo_recente(codigo, competencia, pasta_competencia)
+
                     logging.info(f"Download successful for {cnpj}")
                     df.loc[df['CNPJ'] == cnpj, 'STATUS'] = 'Guia baixada'
-                    df.to_excel('Clientes.xlsx', index=False)
+                    df.to_excel('database.xlsx', index=False)
+
                     iframe = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="frmApp"]'))) # Iframe do site
                     driver.switch_to.frame(iframe)
+
                     bt_ok = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, "//button[text()='OK']")))
                     bt_ok.click()
+
                     bt_voltar = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="cphConteudo_LinkRetornar"]')))
                     bt_voltar.click()
                     driver.switch_to.default_content()
-                    bt_captcha2 = os.path.join(IMAGEM_DIR, 'bt_captcha.png')
-                    lentidao()
-                    clique([bt_captcha2], 15, confidence=0.8)
-                    lentidao()
-                    bt_prossegui2 = os.path.join(IMAGEM_DIR, 'bt_prosseguir.png')
-                    lentidao()
-                    clique([bt_prossegui2], 15, confidence=0.8)
-                    lentidao()
+
+                    iframe1 = WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.XPATH, '//*[@id="frmApp"]'))) # Iframe do site
+                    driver.switch_to.frame(iframe1)
+
+                    iframe2 = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="conteudo-pagina"]/div[2]/iframe'))) # Iframe do site
+                    driver.switch_to.frame(iframe2)
+
+                    bt_sou_humano = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="checkbox"]'))) # Botao sou Humano
+                    bt_sou_humano.click()
+                    driver.switch_to.default_content()
+
+                    iframe1 = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="frmApp"]'))) # Iframe do site
+                    driver.switch_to.frame(iframe1)
+
+                    bt_prosseguir = WebDriverWait(driver, 30).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="ctl00_cphConteudo_btnProsseguir"]'))) # Botao Prosseguir
+                    bt_prosseguir.click()
+                    driver.switch_to.default_content()
                     break
                 except Exception as e:
                     logging.error("Nenhuma declaração encontrada.")
                     df.loc[df['CNPJ'] == cnpj, 'STATUS'] = 'Possivel erro no e-CAC, verificar cliente manualmente'
-                    df.to_excel('Clientes.xlsx', index=False)
-                bt_voltar = os.path.join(IMAGEM_DIR, 'bt_voltar.png')
-                lentidao()
-                clique([bt_voltar], 30, confidence=0.8)
-                lentidao()
-                bt_captcha2 = os.path.join(IMAGEM_DIR, 'bt_captcha.png')
-                lentidao()
-                clique([bt_captcha2], 30, confidence=0.8)
-                lentidao()
-                bt_prossegui2 = os.path.join(IMAGEM_DIR, 'bt_prosseguir.png')
-                lentidao()
-                clique([bt_prossegui2], 30, confidence=0.8)
-                lentidao()
+                    df.to_excel('database.xlsx', index=False)
+
+                iframe = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="frmApp"]'))) # Iframe do site
+                driver.switch_to.frame(iframe)    
+
+                bt_voltar = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="cphConteudo_LinkRetornar"]')))
+                bt_voltar.click()
+                driver.switch_to.default_content()
+
+                iframe1 = WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.XPATH, '//*[@id="frmApp"]'))) # Iframe do site
+                driver.switch_to.frame(iframe1)
+
+                iframe2 = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="conteudo-pagina"]/div[2]/iframe'))) # Iframe do site
+                driver.switch_to.frame(iframe2)
+
+                bt_sou_humano = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="checkbox"]'))) # Botao sou Humano
+                bt_sou_humano.click()
+                driver.switch_to.default_content()
+
+                iframe1 = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="frmApp"]'))) # Iframe do site
+                driver.switch_to.frame(iframe1)
+
+                bt_prosseguir = WebDriverWait(driver, 30).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="ctl00_cphConteudo_btnProsseguir"]'))) # Botao Prosseguir
+                bt_prosseguir.click()
+                driver.switch_to.default_content()
+
                 df.loc[df['CNPJ'] == cnpj, 'STATUS'] = 'Guia baixada'
-                df.to_excel('Clientes.xlsx', index=False)
+                df.to_excel('database.xlsx', index=False)
                 break
             except Exception as e:
                 logging.error(f"Erro no processamento do cliente {cnpj}: {e}")
                 df.loc[df['CNPJ'] == cnpj, 'STATUS'] = 'Erro no download'
-                df.to_excel('Clientes.xlsx', index=False)
+                df.to_excel('database.xlsx', index=False)
                 tentativas -= 1
                 if tentativas > 0:
                     logging.info(f"Tentando novamente ({tentativas} tentativas restantes)")
                     time.sleep(3)
-                    navegacao(driver, IMAGEM_DIR, '', '')
+                    navegacao(driver)
                 else:
                     logging.error(f"Falha após {3} tentativas para o cliente {cnpj}") 

@@ -12,7 +12,7 @@ competencia = '06 2025'
 PASTA_COMPETENCIA = Path(__file__).parent / "Competencias executadas"
 PASTA_DOWNLOAD = PASTA_COMPETENCIA / f"{competencia}"
 IMAGEM_DIR = Path(__file__).parent / "img"
-PLANILHA = Path(__file__).parent / "Clientes.xlsx"
+PLANILHA = Path(__file__).parent / "database.xlsx"
 CACHE = Path(__file__).parent / 'perfil-path'
 
 logging.basicConfig(filename='AUTOMACAO-DCTF.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -37,9 +37,9 @@ def main():
             print("Aguardando login manual...")
             login(driver)
             input("Login concluído? Pressione ENTER para continuar com a navegação e processamento...")
-            navegacao(driver, str(IMAGEM_DIR), data_inicial, data_final)
-            transmissao(cnpjs, codigos, df, driver, str(IMAGEM_DIR), competencia, pasta_competencia)
-            df.to_excel('Clientes.xlsx', index=False)
+            navegacao(driver)
+            transmissao(cnpjs, codigos, df, driver, str(IMAGEM_DIR), competencia, pasta_competencia, data_inicial, data_final)
+            df.to_excel('database.xlsx', index=False)
             print("="*50)
             print("AUTOMAÇÃO CONCLUÍDA COM SUCESSO!")
             print("="*50)
@@ -67,7 +67,7 @@ def main():
                 print("Número máximo de tentativas excedido. Encerrando programa.")
                 logging.error("Número máximo de tentativas excedido. Programa finalizado com erro.")
     try:
-        df.to_excel('Clientes.xlsx', index=False)
+        df.to_excel('database.xlsx', index=False)
         print("Planilha salva com status final dos processamentos.")
     except:
         print("Não foi possível salvar a planilha final.")
