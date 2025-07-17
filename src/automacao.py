@@ -8,7 +8,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
-import pyautogui
 import pandas as pd
 from .utils import reconhecimento, clique, clique2, lentidao
 
