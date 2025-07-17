@@ -72,12 +72,15 @@ def navegacao(driver):
         logging.info("Iniciando navegação no sistema.")
 
         bt_home = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="linkHome"]'))) # Botão Home 
+        logging.info("Clicando no botão Home")
         bt_home.click()
 
         bt_declaracoes = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//li[@id="btn214"]'))) # Botão Declarações e Demonstrativos
+        logging.info("Clicando no botão Declarações e Demonstrativos")
         bt_declaracoes.click()
 
         bt_assinar = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="containerServicos214"]/div[2]/ul/li[1]/a'))) # Assinar e transmitir DCTF
+        logging.info("Clicando no botão Assinar e transmitir DCTF")
         bt_assinar.click()
 
         iframe1 = WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.XPATH, '//*[@id="frmApp"]'))) # Iframe do site
@@ -88,6 +91,7 @@ def navegacao(driver):
 
         time.sleep(3)
         bt_sou_humano = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="checkbox"]'))) # Botao sou Humano
+        logging.info("Clicando no botão Sou Humano (captcha)")
         bt_sou_humano.click()
 
         driver.switch_to.default_content()
@@ -95,12 +99,14 @@ def navegacao(driver):
         iframe1 = WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.XPATH, '//*[@id="frmApp"]'))) # Iframe do site
         driver.switch_to.frame(iframe1)
         bt_prosseguir = WebDriverWait(driver, 30).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="ctl00_cphConteudo_btnProsseguir"]'))) # Botao Prosseguir
+        logging.info("Clicando no botão Prosseguir")
         bt_prosseguir.click()
         driver.switch_to.default_content()
 
         iframe = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="frmApp"]'))) # Iframe do site
         driver.switch_to.frame(iframe)
         bt_sou_procurador = WebDriverWait(driver, 30).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="ctl00_cphConteudo_chkListarOutorgantes"]')))
+        logging.info("Clicando no botão Sou Procurador")
         bt_sou_procurador.click()
         driver.switch_to.default_content()
 
@@ -122,55 +128,42 @@ def transmissao(cnpjs, codigos, df, driver, IMAGEM_DIR, competencia, pasta_compe
         while tentativas > 0:
             try:
                 logging.info(f'Iniciando a transmissão da empresa: {cnpj}')
-
                 iframe = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="frmApp"]'))) # Iframe do site
                 driver.switch_to.frame(iframe)
-                
                 data_inicio = WebDriverWait(driver, 30).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="txtDataInicio"]'))) # Campo de data inicial
                 data_inicio.clear() # Limpa o campo de data inicial
                 data_inicio.send_keys(data_inicial) # Escreve a data inicial
-
                 data_fim = WebDriverWait(driver, 30).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="txtDataFinal"]'))) # Campo de data final
                 data_fim.clear() # Limpa o campo de data final
                 data_fim.send_keys(data_final) # Escreve a data final
-
                 bt_ortogante = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="ctl00_cphConteudo_UpdatePanelListaOutorgantes"]/div/div[2]/div/div/div/button')))
+                logging.info("Clicando no botão Ortogante")
                 bt_ortogante.click() # Campo ortogante onde tem entrada do cnpj do cliente
-
                 bt_nenhum = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="ctl00_cphConteudo_UpdatePanelListaOutorgantes"]/div/div[2]/div/div/div/div/div[2]/div/button[2]')))
+                logging.info("Clicando no botão Nenhum")
                 bt_nenhum.click() # remover clientes selecionados antes de inserir o novo cnpj para pesquisar
-
                 campo_cnpj = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="ctl00_cphConteudo_UpdatePanelListaOutorgantes"]/div/div[2]/div/div/div/div/div[1]/input')))
-                campo_cnpj.send_keys(cnpj)
-
+                campo_cnpj.send_keys(cnpj) # Insere o CNPJ na barra de busca
                 selecionar_cnpj = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="ctl00_cphConteudo_UpdatePanelListaOutorgantes"]/div/div[2]/div/div/div/div/ul')))
-                selecionar_cnpj.click()
-
+                selecionar_cnpj.click() # Seleciona o CNPJ na barra de busca
                 bt_pesquisar = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="ctl00_cphConteudo_btnFiltar"]')))
-                bt_pesquisar.click()
-                driver.switch_to.default_content()
-               
-                erro_sem_declaracoes = os.path.join(IMAGEM_DIR, 'rc_sem_declaracoes.png')
-                time.sleep(3)
+                bt_pesquisar.click() # Clica para buscar o Cliente
+
                 try:
-                    reconhecimento([erro_sem_declaracoes], 30, confidence=0.8)
+                    WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, "//div[@class='alert alert-info' and normalize-space(.)='Nenhuma declaração encontrada']"))) # Verifica se o cliente não tem declaração
                     logging.info("Nenhuma declaração encontrada.")
-                    df.loc[df['CNPJ'] == cnpj, 'STATUS'] = 'Nenhuma declaração encontrada'
+                    df.loc[df['CNPJ'] == cnpj, 'STATUS'] = 'Nenhuma declaração encontrada' # Atualiza o status do cliente
                     df.to_excel('database.xlsx', index=False)
                     break
                 except Exception as e:
                     logging.info('Declaracao encontrada')
-                    iframe = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="frmApp"]'))) # Iframe do site
-                    driver.switch_to.frame(iframe)
-                    bt_visualizar = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="ctl00_cphConteudo_tabelaListagemDctf_GridViewDctfs_ctl02_lbkVisualizarDctf"]')))
+                    bt_visualizar = WebDriverWait(driver, 30).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="ctl00_cphConteudo_tabelaListagemDctf_GridViewDctfs_ctl02_lbkVisualizarDctf"]')))
+                    logging.info("Clicando no botão Visualizar")
                     bt_visualizar.click() # Clica no botão visualizar
-                    driver.switch_to.default_content()
                 try:
-                    iframe = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="frmApp"]'))) # Iframe do site
-                    driver.switch_to.frame(iframe)
-                    bt_emitir_darf = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="LinkEmitirDARFIntegral"]')))
+                    bt_emitir_darf = WebDriverWait(driver, 30).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="LinkEmitirDARFIntegral"]')))
+                    logging.info("Clicando no botão Emitir DARF")
                     bt_emitir_darf.click() # Clica no botão emitir DARF
-                    driver.switch_to.default_content()
 
                     time.sleep(5)
                     renomear_arquivo_recente(codigo, competencia, pasta_competencia)
@@ -179,59 +172,54 @@ def transmissao(cnpjs, codigos, df, driver, IMAGEM_DIR, competencia, pasta_compe
                     df.loc[df['CNPJ'] == cnpj, 'STATUS'] = 'Guia baixada'
                     df.to_excel('database.xlsx', index=False)
 
-                    iframe = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="frmApp"]'))) # Iframe do site
-                    driver.switch_to.frame(iframe)
-
                     bt_ok = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, "//button[text()='OK']")))
+                    logging.info("Clicando no botão OK")
                     bt_ok.click()
 
                     bt_voltar = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="cphConteudo_LinkRetornar"]')))
+                    logging.info("Clicando no botão Voltar")
                     bt_voltar.click()
-                    driver.switch_to.default_content()
-
-                    iframe1 = WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.XPATH, '//*[@id="frmApp"]'))) # Iframe do site
-                    driver.switch_to.frame(iframe1)
 
                     iframe2 = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="conteudo-pagina"]/div[2]/iframe'))) # Iframe do site
                     driver.switch_to.frame(iframe2)
 
                     bt_sou_humano = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="checkbox"]'))) # Botao sou Humano
+                    logging.info("Clicando no botão Sou Humano (captcha)")
                     bt_sou_humano.click()
                     driver.switch_to.default_content()
 
-                    iframe1 = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="frmApp"]'))) # Iframe do site
-                    driver.switch_to.frame(iframe1)
+                    driver.switch_to.frame(iframe)
 
                     bt_prosseguir = WebDriverWait(driver, 30).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="ctl00_cphConteudo_btnProsseguir"]'))) # Botao Prosseguir
+                    logging.info("Clicando no botão Prosseguir")
                     bt_prosseguir.click()
                     driver.switch_to.default_content()
                     break
+
                 except Exception as e:
                     logging.error("Nenhuma declaração encontrada.")
                     df.loc[df['CNPJ'] == cnpj, 'STATUS'] = 'Possivel erro no e-CAC, verificar cliente manualmente'
                     df.to_excel('database.xlsx', index=False)
 
-                iframe = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="frmApp"]'))) # Iframe do site
                 driver.switch_to.frame(iframe)    
 
                 bt_voltar = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="cphConteudo_LinkRetornar"]')))
+                logging.info("Clicando no botão Voltar")
                 bt_voltar.click()
                 driver.switch_to.default_content()
 
-                iframe1 = WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.XPATH, '//*[@id="frmApp"]'))) # Iframe do site
-                driver.switch_to.frame(iframe1)
-
-                iframe2 = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="conteudo-pagina"]/div[2]/iframe'))) # Iframe do site
+                driver.switch_to.frame(iframe)
                 driver.switch_to.frame(iframe2)
 
                 bt_sou_humano = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, '//*[@id="checkbox"]'))) # Botao sou Humano
+                logging.info("Clicando no botão Sou Humano (captcha)")
                 bt_sou_humano.click()
+
                 driver.switch_to.default_content()
-
-                iframe1 = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="frmApp"]'))) # Iframe do site
-                driver.switch_to.frame(iframe1)
-
+                driver.switch_to.frame(iframe)
+                
                 bt_prosseguir = WebDriverWait(driver, 30).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="ctl00_cphConteudo_btnProsseguir"]'))) # Botao Prosseguir
+                logging.info("Clicando no botão Prosseguir")
                 bt_prosseguir.click()
                 driver.switch_to.default_content()
 
